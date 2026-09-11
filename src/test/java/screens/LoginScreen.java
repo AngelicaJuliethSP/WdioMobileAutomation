@@ -16,6 +16,10 @@ public class LoginScreen extends BaseScreen {
     private final By signUpButton = AppiumBy.androidUIAutomator(
             "new UiSelector().text('SIGN UP')");
 
+    private final By dialogTitle = AppiumBy.id("com.wdiodemoapp:id/alert_title");
+    private final By dialogMessage = AppiumBy.id("android:id/message");
+    private final By dialogOkButton = AppiumBy.id("android:id/button1");
+
     public LoginScreen(AndroidDriver driver) {
         super(driver);
     }
@@ -46,6 +50,18 @@ public class LoginScreen extends BaseScreen {
 
     public void tapSignUpSubmit() {
         tap(signUpButton);
+    }
+
+    public String getDialogTitle() {
+        return getText(dialogTitle);
+    }
+
+    public String getDialogMessage() {
+        return getText(dialogMessage);
+    }
+
+    public void tapDialogOk() {
+        tap(dialogOkButton);
     }
 
     public boolean isEmailFieldDisplayed() {
