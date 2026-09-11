@@ -67,4 +67,20 @@ public class LoginScreen extends BaseScreen {
     public boolean isEmailFieldDisplayed() {
         return isDisplayed(emailInput);
     }
+
+    public void submitSignUp(String email, String password) {
+        switchToSignUpTab();
+        enterEmail(email);
+        enterPassword(password);
+        enterConfirmPassword(password);
+        tapSignUpButton();
+    }
+
+    public void submitLogin(String email, String password) {
+        switchToLoginTab();
+        enterEmail(email);
+        enterPassword(password);
+        tapLoginButton();
+    }
+
 }
