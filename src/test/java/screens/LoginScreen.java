@@ -8,13 +8,12 @@ public class LoginScreen extends BaseScreen {
 
     private final By emailInput = AppiumBy.accessibilityId("input-email");
     private final By passwordInput = AppiumBy.accessibilityId("input-password");
-    private final By confirmPasswordInput = AppiumBy.id("input-repeat-password");
+    private final By confirmPasswordInput = AppiumBy.accessibilityId("input-repeat-password");
     private final By loginButton = AppiumBy.accessibilityId("button-LOGIN");
 
     private final By signUpTab = By.xpath("//android.widget.TextView[@text='Sign up']");
     private final By loginTab = By.xpath("//android.widget.TextView[@text='Login']");
-    private final By signUpButton = AppiumBy.androidUIAutomator(
-            "new UiSelector().text('SIGN UP')");
+    private final By signUpButton = AppiumBy.accessibilityId("button-SIGN UP");
 
     private final By dialogTitle = AppiumBy.id("com.wdiodemoapp:id/alert_title");
     private final By dialogMessage = AppiumBy.id("android:id/message");
@@ -73,14 +72,14 @@ public class LoginScreen extends BaseScreen {
         enterEmail(email);
         enterPassword(password);
         enterConfirmPassword(password);
-        tapSignUpButton();
+        tapSignUpSubmit();
     }
 
     public void submitLogin(String email, String password) {
         switchToLoginTab();
         enterEmail(email);
         enterPassword(password);
-        tapLoginButton();
+        tapLogin();
     }
 
 }

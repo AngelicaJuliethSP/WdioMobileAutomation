@@ -6,12 +6,13 @@ import org.openqa.selenium.By;
 
 public class HomeScreen extends BaseScreen {
 
-    private final By homeIcon = AppiumBy.accessibilityId("Home");;
+    private final By homeIcon = AppiumBy.accessibilityId("Home");
+    private final By webIcon = AppiumBy.accessibilityId("Webview");
     private final By loginIcon = AppiumBy.accessibilityId("Login");
     private final By formsIcon = AppiumBy.accessibilityId("Forms");
     private final By swipeIcon = AppiumBy.accessibilityId("Swipe");
-
-    private final By menuIcon = By.xpath("//android.widget.TextView[@text='Home']");
+    private final By dragIcon = AppiumBy.accessibilityId("Drag");
+    private final By menuIcon = AppiumBy.accessibilityId("Menu");
 
     public HomeScreen(AndroidDriver driver) {
         super(driver);
@@ -19,6 +20,10 @@ public class HomeScreen extends BaseScreen {
 
     public void tapHomeIcon() {
         tap(homeIcon);
+    }
+
+    public void tapWebIcon() {
+        tap(webIcon);
     }
 
     public void tapLoginIcon() {
@@ -31,6 +36,10 @@ public class HomeScreen extends BaseScreen {
 
     public void tapSwipeIcon() {
         tap(swipeIcon);
+    }
+
+    public void tapDragIcon() {
+        tap(dragIcon);
     }
 
     public void tapMenuIcon() {

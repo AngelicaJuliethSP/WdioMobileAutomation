@@ -18,9 +18,6 @@ public class LoginTest extends BaseTest {
         String email = DataGenerator.generateRandomEmail();
         String password = "Test1234!";
 
-        // Reusa el flujo de signup para garantizar un usuario válido y
-        // fresco, sin depender de que SignupTest se haya ejecutado antes
-        // ni de un usuario fijo hardcodeado.
         loginScreen.submitSignUp(email, password);
         loginScreen.tapDialogOk();
 
