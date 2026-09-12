@@ -13,6 +13,7 @@ public class HomeScreen extends BaseScreen {
     private final By swipeIcon = AppiumBy.accessibilityId("Swipe");
     private final By dragIcon = AppiumBy.accessibilityId("Drag");
     private final By menuIcon = AppiumBy.accessibilityId("Menu");
+    private final By homeScreenContainer = AppiumBy.accessibilityId("Home-screen");
 
     public HomeScreen(AndroidDriver driver) {
         super(driver);
@@ -46,7 +47,8 @@ public class HomeScreen extends BaseScreen {
         tap(menuIcon);
     }
 
-    public boolean isHomeIconDisplayed() {
-        return isDisplayed(homeIcon);
+    public boolean isHomeScreenDisplayed() {
+        return isDisplayed(homeScreenContainer);
     }
+
 }
