@@ -46,4 +46,8 @@ public abstract class BaseScreen {
                 "percent", percent
         ));
     }
+
+    protected boolean isPresent(By locator) {
+        return !driver.findElements(locator).isEmpty();
+    }
 }
