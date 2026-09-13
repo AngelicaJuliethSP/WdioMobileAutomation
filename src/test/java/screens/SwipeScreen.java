@@ -11,7 +11,7 @@ public class SwipeScreen extends BaseScreen {
 
     private final By screenContainer = AppiumBy.accessibilityId("Swipe-screen");
     private final By card = AppiumBy.accessibilityId("card");
-    private final By foundMeText = By.xpath("//android.widget.TextView[@text='You found me!!!']");
+    private final By foundMeText = By.xpath("//*[@text='You found me!!!' or @content-desc='You found me!!!']");
 
     public SwipeScreen(AndroidDriver driver) {
         super(driver);
@@ -29,6 +29,25 @@ public class SwipeScreen extends BaseScreen {
         return isPresent(cardAtIndex(index));
     }
 
+    public void waitUntilCardHidden(int index) {
+        wait.until(driver -> !isCardIndexVisible(index));
+    }
+
+    public void swipeForwardAndWait(int currentIndex) {
+        int attempts = 0;
+        int maxAttempts = 3;
+
+        while (isCardIndexVisible(currentIndex) && attempts < maxAttempts) {
+            swipeCarouselForward();
+            try {
+                wait.until(driver -> !isCardIndexVisible(currentIndex));
+                return;
+            } catch (org.openqa.selenium.TimeoutException e) {
+                attempts++;
+            }
+        }
+    }
+
     public void swipeCarouselForward() {
         List<WebElement> cards = driver.findElements(card);
         if (!cards.isEmpty()) {
@@ -39,17 +58,25 @@ public class SwipeScreen extends BaseScreen {
         }
     }
 
-    public void swipeScreenUp() {
-        WebElement container = driver.findElement(screenContainer);
-        swipeElementVertically(container, true);
+    public void scrollUntilFoundMeVisible(int maxAttempts) {
+        try {
+            // Usa el motor nativo de Android para hacer scroll hasta que el texto sea visible
+            driver.findElement(AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true))" +
+                            ".scrollIntoView(new UiSelector().text(\"You found me!!!\"))"
+            ));
+        } catch (Exception e) {
+            // En caso de que falle UiScrollable, intentamos con swipe de respaldo
+            int attempts = 0;
+            while (!isDisplayed(foundMeText) && attempts < maxAttempts) {
+                swipeScreenUp();
+                attempts++;
+            }
+        }
     }
 
-    public void scrollUntilFoundMeVisible(int maxAttempts) {
-        int attempts = 0;
-        while (!isPresent(foundMeText) && attempts < maxAttempts) {
-            swipeScreenUp();
-            attempts++;
-        }
+    public boolean isCardOnScreen(int index) {
+        return isPartiallyOnScreen(cardAtIndex(index));
     }
 
     public boolean isFoundMeTextDisplayed() {
