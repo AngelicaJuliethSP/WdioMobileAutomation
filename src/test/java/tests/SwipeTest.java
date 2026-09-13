@@ -16,16 +16,19 @@ public class SwipeTest extends BaseTest {
         SwipeScreen swipeScreen = new SwipeScreen(driver);
         Assert.assertTrue(swipeScreen.isScreenDisplayed(), "Swipe screen no se muestra");
 
-        int initialCount = swipeScreen.getVisibleCardCount();
-        swipeScreen.swipeTopCardRight();
-        int countAfterOneSwipe = swipeScreen.getVisibleCardCount();
-        Assert.assertEquals(countAfterOneSwipe, initialCount - 1,
-                "La carta anterior no se ocultó tras el swipe");
+        // b. Swipe de la primera carta y verificar que se oculta
+        Assert.assertTrue(swipeScreen.isCardIndexVisible(0), "La carta 0 debería estar visible al inicio");
+        swipeScreen.swipeCarouselForward();
+        Assert.assertFalse(swipeScreen.isCardIndexVisible(0), "La carta 0 debería ocultarse tras el swipe");
 
-        swipeScreen.swipeAllCardsExceptLast();
-        Assert.assertEquals(swipeScreen.getVisibleCardCount(), 1,
-                "Debería quedar solo una carta visible");
+        // c. Seguir hasta la última carta (índice 5, ya que hay 6 en total)
+        for (int i = 0; i < 4; i++) {
+            swipeScreen.swipeCarouselForward();
+        }
+        Assert.assertTrue(swipeScreen.isCardIndexVisible(5), "La última carta (5) debería estar visible");
+        Assert.assertFalse(swipeScreen.isCardIndexVisible(4), "No debería verse ninguna carta anterior junto a la última");
 
+        // d. Scroll vertical hasta encontrar el texto oculto
         swipeScreen.scrollUntilFoundMeVisible(10);
         Assert.assertTrue(swipeScreen.isFoundMeTextDisplayed(),
                 "No se encontró el texto 'You found me!!!' tras el scroll vertical");

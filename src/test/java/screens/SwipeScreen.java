@@ -21,26 +21,27 @@ public class SwipeScreen extends BaseScreen {
         return isDisplayed(screenContainer);
     }
 
-    public int getVisibleCardCount() {
-        return driver.findElements(card).size();
+    private By cardAtIndex(int index) {
+        return By.xpath("//android.view.ViewGroup[@resource-id='__CAROUSEL_ITEM_" + index + "__']/android.view.ViewGroup[@content-desc='card']");
     }
 
-    public void swipeTopCardRight() {
+    public boolean isCardIndexVisible(int index) {
+        return isPresent(cardAtIndex(index));
+    }
+
+    public void swipeCarouselForward() {
         List<WebElement> cards = driver.findElements(card);
         if (!cards.isEmpty()) {
-            swipe(cards.get(0), "right", 1.0);
-        }
-    }
-
-    public void swipeAllCardsExceptLast() {
-        while (getVisibleCardCount() > 1) {
-            swipeTopCardRight();
+            // Deslizar de derecha a izquierda avanza el carrusel a la
+            // siguiente carta (hacia la derecha no hacía nada porque
+            // ya estábamos en la primera carta, no había hacia dónde retroceder).
+            swipeElementHorizontally(cards.get(0), false);
         }
     }
 
     public void swipeScreenUp() {
         WebElement container = driver.findElement(screenContainer);
-        swipe(container, "up", 0.75);
+        swipeElementVertically(container, true);
     }
 
     public void scrollUntilFoundMeVisible(int maxAttempts) {
