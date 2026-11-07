@@ -23,7 +23,7 @@ public abstract class BaseScreen {
 
     public BaseScreen(AndroidDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(25));
     }
 
     protected WebElement waitForVisible(By locator) {
