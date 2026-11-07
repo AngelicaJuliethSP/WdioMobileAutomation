@@ -39,9 +39,8 @@ jobs:
       - name: Start Appium server
         run: |
           npm install -g appium@3.9.0
-          npm install -g appium-uiautomator2-driver@8.7.3
-          appium --address 127.0.0.1 --port 4723 > appium.log 2>&1 &
-          echo "APPIUM_PID=$!" >> $GITHUB_ENV
+          appium driver install uiautomator2
+          nohup appium --address 127.0.0.1 --port 4723 > appium.log 2>&1 &
           # esperar a que el servidor esté listo
           for i in $(seq 1 30); do
             if curl -s http://127.0.0.1:4723/status | grep -q '"ready":true'; then
@@ -50,6 +49,8 @@ jobs:
             fi
             sleep 2
           done
+          # fallar el paso si el servidor nunca quedó listo
+          curl -s http://127.0.0.1:4723/status | grep -q '"ready":true'
 
       - name: Run mobile tests (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
