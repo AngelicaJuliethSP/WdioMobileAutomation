@@ -15,18 +15,26 @@
     </properties>
 
     <dependencies>
-        <!-- Cliente Java de Appium: te da AndroidDriver, AppiumBy, etc. -->
+        <!-- Appium java-client: AndroidDriver, AppiumBy, etc. -->
         <dependency>
             <groupId>io.appium</groupId>
             <artifactId>java-client</artifactId>
             <version>10.1.1</version>
         </dependency>
 
-        <!-- TestNG: el framework de testing, igual al que usaste en SauceDemo y PetStore -->
+        <!-- TestNG: framework de testing -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.10.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Allure TestNG adapter: genera allure-results/ en formato JSON -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-testng</artifactId>
+            <version>2.29.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
