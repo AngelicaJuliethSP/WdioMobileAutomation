@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Ejecución diaria 06:00 UTC (01:00 hora Colombia) — alimenta el histórico del dashboard
+    - cron: "0 6 * * *"
 
 jobs:
   mobile-tests:
