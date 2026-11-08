@@ -107,3 +107,17 @@ jobs:
           name: appium-log
           path: appium.log
           retention-days: 7
+
+      - name: Generate Allure HTML report
+        if: always()
+        run: |
+          npm install -g allure-commandline
+          allure generate target/allure-results -o allure-report --clean
+
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-mobile
+          path: allure-report/
+          retention-days: 7
