@@ -102,6 +102,32 @@ mvn clean test -Dappium.url=http://127.0.0.1:4723 -Ddevice.name=Pixel_6 -Dapp.pa
 
 Both scenarios are executed in CI in a separate step with `maven.test.failure.ignore=true`, so their failures are recorded in the Surefire/Allure reports as **known failures** (documented evidence) without breaking the pipeline.
 
+## CI/CD Pipeline
+
+The suite runs automatically on GitHub Actions on every push/PR to `main`,
+manually (workflow_dispatch), and **daily at 06:00 UTC (01:00 Colombia)** via
+cron, on an Android emulator (API 30, Pixel 6). Each run produces:
+
+| Artifact | Description |
+|---|---|
+| `surefire-reports-mobile` | Surefire XML reports |
+| `allure-results-mobile` | Allure raw results |
+| `allure-report-mobile` | Navigable Allure HTML report |
+| `appium-log` | Appium server log |
+
+### Automatic Dashboard Publishing
+
+After every run (even on failure), the pipeline parses the Surefire XML and
+pushes the consolidated results to
+[Proyecto-grado-dashboard](https://github.com/AngelicaJuliethSP/Proyecto-grado-dashboard),
+which feeds the public QA dashboard:
+**https://proyecto-grado-dashboard.streamlit.app**
+
+This makes the dashboard update **fully automatically** — no manual steps.
+It requires the `DASHBOARD_TOKEN` secret (fine-grained PAT with write access
+to the dashboard repo). If the secret is missing, the step is skipped
+gracefully and the run is not affected.
+
 ## Author
 
 Angélica Julieth Silva Pérez — College Trainee, Globant
