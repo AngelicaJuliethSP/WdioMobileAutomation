@@ -67,7 +67,7 @@ jobs:
           # Paso principal: solo escenarios estables (deben pasar sí o sí).
           # NavigationTest y SwipeTest se ejecutan en un paso aparte como
           # "fallas conocidas" (ver paso siguiente).
-          script: mvn clean test -B "-Dtest=LoginTest,SignupTest"
+          script: mvn clean test -B "-Dtest=LoginTest,SignupTest" "-Dsurefire.reportDirectory=target/surefire-reports-main"
 
       - name: Run known-failure scenarios (Navigation, Swipe)
         uses: reactivecircus/android-emulator-runner@v2
@@ -85,14 +85,16 @@ jobs:
           # maven.test.failure.ignore=true para que la falla quede
           # registrada en los reportes Surefire/Allure como evidencia
           # documentada, sin romper el pipeline.
-          script: mvn test -B "-Dtest=NavigationTest,SwipeTest" "-Dmaven.test.failure.ignore=true"
+          script: mvn test -B "-Dtest=NavigationTest,SwipeTest" "-Dmaven.test.failure.ignore=true" "-Dsurefire.reportDirectory=target/surefire-reports-known"
 
       - name: Upload Surefire reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports-mobile
-          path: target/surefire-reports/
+          path: |
+            target/surefire-reports-main/
+            target/surefire-reports-known/
           retention-days: 7
 
       - name: Upload Allure results
@@ -142,9 +144,17 @@ jobs:
           fi
           python3 dashboard-repo/parser/results_parser.py \
             --project WdioMobileAutomation \
-            --reports-dir target/surefire-reports \
+            --reports-dir target/surefire-reports-main \
             --output dashboard-repo/data/results.json \
             --executed-at "$EXEC_AT"
+          # Segundo registro (fallas conocidas) con timestamp +1 s para
+          # mantener ISO-8601 válido y distinguirlo del principal.
+          EXEC_AT_KNOWN=$(date -u -d "$EXEC_AT + 1 second" +"%Y-%m-%dT%H:%M:%S+00:00" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          python3 dashboard-repo/parser/results_parser.py \
+            --project WdioMobileAutomation \
+            --reports-dir target/surefire-reports-known \
+            --output dashboard-repo/data/results.json \
+            --executed-at "$EXEC_AT_KNOWN"
           cd dashboard-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
