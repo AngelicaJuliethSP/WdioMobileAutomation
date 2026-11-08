@@ -124,3 +124,35 @@ jobs:
           name: allure-report-mobile
           path: allure-report/
           retention-days: 7
+
+      - name: Publish results to dashboard
+        if: always()
+        env:
+          DASHBOARD_TOKEN: ${{ secrets.DASHBOARD_TOKEN }}
+        run: |
+          if [ -z "$DASHBOARD_TOKEN" ]; then
+            echo "DASHBOARD_TOKEN no configurado — se omite la publicación (configure el secreto para activar el flujo automático)."
+            exit 0
+          fi
+          git clone --depth 1 \
+            "https://x-access-token:${DASHBOARD_TOKEN}@github.com/AngelicaJuliethSP/Proyecto-grado-dashboard.git" dashboard-repo
+          EXEC_AT="${{ github.event.head_commit.timestamp }}"
+          if [ -z "$EXEC_AT" ]; then
+            EXEC_AT=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          fi
+          python3 dashboard-repo/parser/results_parser.py \
+            --project WdioMobileAutomation \
+            --reports-dir target/surefire-reports \
+            --output dashboard-repo/data/results.json \
+            --executed-at "$EXEC_AT"
+          cd dashboard-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/results.json
+          if git diff --cached --quiet; then
+            echo "Sin cambios en el histórico — nada que publicar."
+          else
+            git commit -m "ci: resultados automaticos de WdioMobileAutomation (run ${{ github.run_id }})"
+            git push origin main
+            echo "Resultados publicados en el dashboard."
+          fi
