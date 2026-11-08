@@ -98,6 +98,9 @@ mvn clean test -Dappium.url=http://127.0.0.1:4723 -Ddevice.name=Pixel_6 -Dapp.pa
 ## Known Limitations
 
 - The **Navigation** scenario requires the app's WebView to render; on headless emulators with software rendering (SwiftShader) the WebView content may not load, causing the scenario to fail. On emulators with hardware acceleration it passes consistently.
+- The **Swipe** scenario is intermittent on headless emulators with software rendering: swipe gestures are not always processed by the system, so the scenario may fail even though the framework and locators are correct. On emulators with hardware acceleration it passes consistently (verified during the refactor phase).
+
+Both scenarios are executed in CI in a separate step with `maven.test.failure.ignore=true`, so their failures are recorded in the Surefire/Allure reports as **known failures** (documented evidence) without breaking the pipeline.
 
 ## Author
 

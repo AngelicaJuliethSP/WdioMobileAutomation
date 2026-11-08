@@ -61,13 +61,28 @@ jobs:
           profile: pixel_6
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          # NavigationTest y SwipeTest excluidos: son intermitentes en
-          # emuladores headless con renderizado por software (SwiftShader) —
-          # el WebView no renderiza y los gestos de swipe no siempre se
-          # procesan. Limitación conocida del entorno de CI, documentada
-          # en el README; ambos escenarios pasan en emulador con
-          # aceleración por hardware.
-          script: mvn clean test -B "-Dtest=!NavigationTest,!SwipeTest"
+          # Paso principal: solo escenarios estables (deben pasar sí o sí).
+          # NavigationTest y SwipeTest se ejecutan en un paso aparte como
+          # "fallas conocidas" (ver paso siguiente).
+          script: mvn clean test -B "-Dtest=LoginTest,SignupTest"
+
+      - name: Run known-failure scenarios (Navigation, Swipe)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          # Escenarios intermitentes bajo renderizado por software
+          # (SwiftShader): WebView no renderiza (Navigation) y gestos de
+          # swipe no siempre se procesan (Swipe). Limitación conocida del
+          # entorno de CI, documentada en el README. Se ejecutan con
+          # maven.test.failure.ignore=true para que la falla quede
+          # registrada en los reportes Surefire/Allure como evidencia
+          # documentada, sin romper el pipeline.
+          script: mvn test -B "-Dtest=NavigationTest,SwipeTest" "-Dmaven.test.failure.ignore=true"
 
       - name: Upload Surefire reports
         if: always()
