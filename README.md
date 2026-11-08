@@ -1,41 +1,41 @@
-# WdioMobile Automation Framework
+# Framework de Automatización WdioMobile
 
-Test automation framework for the **WebdriverIO Native Demo App** (Android) built with Appium (UiAutomator2), Java, and TestNG, following the Screenplay-like **Screen Object Model** pattern.
+Framework de automatización de pruebas para la **WebdriverIO Native Demo App** (Android) construido con Appium (UiAutomator2), Java y TestNG, siguiendo el patrón **Screen Object Model** (similar a Screenplay).
 
-## Overview
+## Descripción general
 
-This project automates four core user flows on the WebdriverIO native demo application:
+Este proyecto automatiza cuatro flujos de usuario principales de la aplicación nativa demo de WebdriverIO:
 
-- **Login**: valid credentials login and successful logout verification.
-- **Signup**: new account creation with auto-generated data and verification of the confirmation dialog.
-- **Swipe**: horizontal card swiping until reaching the hidden text (`FIND ME` 🎉) on the last card.
-- **Navigation**: navigation through all bottom menu tabs (Home, Web, Login, Forms, Swipe, Drag).
+- **Login**: inicio de sesión con credenciales válidas y verificación del logout exitoso.
+- **Signup**: creación de una nueva cuenta con datos autogenerados y verificación del diálogo de confirmación.
+- **Swipe**: deslizamiento horizontal de tarjetas hasta llegar al texto oculto (`FIND ME` 🎉) de la última tarjeta.
+- **Navigation**: navegación por todas las pestañas del menú inferior (Home, Web, Login, Forms, Swipe, Drag).
 
-## Tech Stack
+## Stack tecnológico
 
-| Tool | Version | Purpose |
+| Herramienta | Versión | Propósito |
 |---|---|---|
-| Java | 17 | Programming language |
-| Maven | 3.x | Build and dependency management |
-| Appium Java Client | 9.x | Mobile automation |
-| Appium Server | 3.9.0 | Automation server |
-| UiAutomator2 Driver | 8.7.3 | Android automation engine |
-| TestNG | 7.10.2 | Test runner and annotations |
-| Android Emulator | API 37.1 | Target device (Pixel 6 AVD) |
+| Java | 17 | Lenguaje de programación |
+| Maven | 3.x | Compilación y gestión de dependencias |
+| Appium Java Client | 9.x | Automatización móvil |
+| Appium Server | 3.9.0 | Servidor de automatización |
+| Driver UiAutomator2 | 8.7.3 | Motor de automatización Android |
+| TestNG | 7.10.2 | Ejecutor de pruebas y anotaciones |
+| Emulador Android | API 37.1 | Dispositivo objetivo (AVD Pixel 6) |
 
-## Project Structure
+## Estructura del proyecto
 
 ```
 WdioMobileAutomation/
-├── apps/                            # Target APK (not versioned)
+├── apps/                            # APK objetivo (no versionado)
 ├── src/
 │   └── test/java/
 │       ├── base/
-│       │   └── BaseTest.java        # Driver lifecycle (@BeforeMethod/@AfterMethod)
+│       │   └── BaseTest.java        # Ciclo de vida del driver (@BeforeMethod/@AfterMethod)
 │       ├── drivers/
-│       │   └── DriverManager.java   # AndroidDriver provider (externalized config)
+│       │   └── DriverManager.java   # Proveedor de AndroidDriver (config externalizada)
 │       ├── screens/
-│       │   ├── BaseScreen.java      # Shared waits and helpers
+│       │   ├── BaseScreen.java      # Esperas y helpers compartidos
 │       │   ├── HomeScreen.java
 │       │   ├── LoginScreen.java
 │       │   ├── MenuScreen.java
@@ -49,85 +49,85 @@ WdioMobileAutomation/
 │       │   ├── SwipeTest.java
 │       │   └── NavigationTest.java
 │       └── utils/
-│           └── DataGenerator.java   # Random test data generation
+│           └── DataGenerator.java   # Generación de datos de prueba aleatorios
 ├── pom.xml
 └── .gitignore
 ```
 
-## Design Decisions
+## Decisiones de diseño
 
-- **Screen Object Model**: each app screen is a class exposing high-level actions; locators live exclusively in screen classes and tests never touch `WebElement`/`driver` directly.
-- **Externalized configuration**: APK path, device name, and Appium URL are resolved with the priority `-Dsystem property` → `environment variable` → `default value`, so the suite runs on any machine without code changes.
-- **APK validation**: `DriverManager` resolves relative APK paths to absolute (Appium resolves relative paths against its own working directory) and fails fast with an actionable message if the file is missing.
-- **Explicit waits**: shared wait helpers in `BaseScreen` avoid fixed sleeps and flaky element lookups.
+- **Screen Object Model**: cada pantalla de la app es una clase que expone acciones de alto nivel; los localizadores viven exclusivamente en las clases de pantallas y las pruebas nunca tocan `WebElement`/`driver` directamente.
+- **Configuración externalizada**: la ruta del APK, el nombre del dispositivo y la URL de Appium se resuelven con la prioridad `propiedad del sistema -D` → `variable de entorno` → `valor por defecto`, de modo que la suite corre en cualquier máquina sin cambios de código.
+- **Validación del APK**: `DriverManager` resuelve rutas relativas del APK a absolutas (Appium resuelve rutas relativas contra su propio directorio de trabajo) y falla rápido con un mensaje accionable si el archivo no existe.
+- **Esperas explícitas**: los helpers de espera compartidos en `BaseScreen` evitan esperas fijas y búsquedas de elementos inestables.
 
-## Configuration
+## Configuración
 
-| Parameter | System property | Environment variable | Default |
+| Parámetro | Propiedad del sistema | Variable de entorno | Por defecto |
 |---|---|---|---|
-| Appium server URL | `-Dappium.url` | `APPIUM_URL` | `http://127.0.0.1:4723` |
-| Device name | `-Ddevice.name` | `DEVICE_NAME` | `Pixel_6` |
-| APK path | `-Dapp.path` | `APP_PATH` | `apps/android.wdio.native.app.v2.2.0.apk` |
+| URL del servidor Appium | `-Dappium.url` | `APPIUM_URL` | `http://127.0.0.1:4723` |
+| Nombre del dispositivo | `-Ddevice.name` | `DEVICE_NAME` | `Pixel_6` |
+| Ruta del APK | `-Dapp.path` | `APP_PATH` | `apps/android.wdio.native.app.v2.2.0.apk` |
 
-## How to Run
+## Cómo ejecutar
 
-### Prerequisites
+### Prerrequisitos
 
 - JDK 17+
 - Maven 3.6+
-- Node.js + Appium Server 3.9+ with the `uiautomator2` driver (8.7.3+)
-- Android SDK with an emulator (AVD `Pixel_6` recommended) running API 34+
-- The APK placed at `apps/android.wdio.native.app.v2.2.0.apk` (or configured via `APP_PATH`)
+- Node.js + Appium Server 3.9+ con el driver `uiautomator2` (8.7.3+)
+- Android SDK con un emulador (se recomienda AVD `Pixel_6`) corriendo API 34+
+- El APK ubicado en `apps/android.wdio.native.app.v2.2.0.apk` (o configurado vía `APP_PATH`)
 
-### Execute
+### Ejecución
 
 ```bash
-# start the emulator, then:
+# iniciar el emulador, luego:
 appium --address 127.0.0.1 --port 4723
 
-# in another terminal:
+# en otra terminal:
 mvn clean test
 ```
 
-With custom configuration:
+Con configuración personalizada:
 
 ```bash
-mvn clean test -Dappium.url=http://127.0.0.1:4723 -Ddevice.name=Pixel_6 -Dapp.path=/path/to/app.apk
+mvn clean test -Dappium.url=http://127.0.0.1:4723 -Ddevice.name=Pixel_6 -Dapp.path=/ruta/a/app.apk
 ```
 
-## Known Limitations
+## Limitaciones conocidas
 
-- The **Navigation** scenario requires the app's WebView to render; on headless emulators with software rendering (SwiftShader) the WebView content may not load, causing the scenario to fail. On emulators with hardware acceleration it passes consistently.
-- The **Swipe** scenario is intermittent on headless emulators with software rendering: swipe gestures are not always processed by the system, so the scenario may fail even though the framework and locators are correct. On emulators with hardware acceleration it passes consistently (verified during the refactor phase).
+- El escenario **Navigation** requiere que el WebView de la app renderice; en emuladores headless con renderizado por software (SwiftShader) el contenido del WebView puede no cargar, causando el fallo del escenario. En emuladores con aceleración por hardware pasa consistentemente.
+- El escenario **Swipe** es intermitente en emuladores headless con renderizado por software: los gestos de deslizamiento no siempre son procesados por el sistema, por lo que el escenario puede fallar aunque el framework y los localizadores sean correctos. En emuladores con aceleración por hardware pasa consistentemente (verificado durante la fase de refactorización).
 
-Both scenarios are executed in CI in a separate step with `maven.test.failure.ignore=true`, so their failures are recorded in the Surefire/Allure reports as **known failures** (documented evidence) without breaking the pipeline.
+Ambos escenarios se ejecutan en CI en un paso separado con `maven.test.failure.ignore=true`, de modo que sus fallos quedan registrados en los reportes de Surefire/Allure como **fallas conocidas** (evidencia documentada) sin romper el pipeline.
 
-## CI/CD Pipeline
+## Pipeline CI/CD
 
-The suite runs automatically on GitHub Actions on every push/PR to `main`,
-manually (workflow_dispatch), and **daily at 06:00 UTC (01:00 Colombia)** via
-cron, on an Android emulator (API 30, Pixel 6). Each run produces:
+La suite corre automáticamente en GitHub Actions en cada push/PR a `main`,
+manualmente (workflow_dispatch) y **a diario a las 06:00 UTC (01:00 Colombia)**
+vía cron, sobre un emulador Android (API 30, Pixel 6). Cada ejecución produce:
 
-| Artifact | Description |
+| Artefacto | Descripción |
 |---|---|
-| `surefire-reports-mobile` | Surefire XML reports |
-| `allure-results-mobile` | Allure raw results |
-| `allure-report-mobile` | Navigable Allure HTML report |
-| `appium-log` | Appium server log |
+| `surefire-reports-mobile` | Reportes XML de Surefire |
+| `allure-results-mobile` | Resultados crudos de Allure |
+| `allure-report-mobile` | Reporte HTML navegable de Allure |
+| `appium-log` | Log del servidor Appium |
 
-### Automatic Dashboard Publishing
+### Publicación automática al dashboard
 
-After every run (even on failure), the pipeline parses the Surefire XML and
-pushes the consolidated results to
+Después de cada ejecución (incluso con fallos), el pipeline parsea los XML de
+Surefire y publica los resultados consolidados en
 [Proyecto-grado-dashboard](https://github.com/AngelicaJuliethSP/Proyecto-grado-dashboard),
-which feeds the public QA dashboard:
+que alimenta el dashboard público de QA:
 **https://proyecto-grado-dashboard.streamlit.app**
 
-This makes the dashboard update **fully automatically** — no manual steps.
-It requires the `DASHBOARD_TOKEN` secret (fine-grained PAT with write access
-to the dashboard repo). If the secret is missing, the step is skipped
-gracefully and the run is not affected.
+Esto hace que el dashboard se actualice de forma **100 % automática** — sin
+pasos manuales. Requiere el secreto `DASHBOARD_TOKEN` (PAT fine-grained con
+acceso de escritura al repo del dashboard). Si el secreto no existe, el paso
+se omite de forma controlada y la ejecución no se ve afectada.
 
-## Author
+## Autora
 
 Angélica Julieth Silva Pérez — College Trainee, Globant
