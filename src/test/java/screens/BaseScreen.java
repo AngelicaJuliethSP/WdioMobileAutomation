@@ -65,8 +65,13 @@ public abstract class BaseScreen {
         int centerY = webElement.getRect().getY() + (webElement.getRect().getHeight() / 2);
         int screenWidth = driver.manage().window().getSize().getWidth();
 
-        int startX = toRight ? (int) (screenWidth * 0.08) : (int) (screenWidth * 0.92);
-        int endX = toRight ? (int) (screenWidth * 0.100) : (int) (screenWidth * 0.00);
+        // Margen del 5% en ambos bordes: nunca termina en x=0 (borde de la
+        // pantalla, donde Android puede interpretar el gesto como "atrás").
+        // Antes: toRight deslizaba del 8% al 10% (movimiento de ~2% del ancho,
+        // insuficiente para cambiar de tarjeta).
+        int margin = (int) (screenWidth * 0.05);
+        int startX = toRight ? margin : screenWidth - margin;
+        int endX = toRight ? screenWidth - margin : margin;
 
         PointerInput dedito = new PointerInput(PointerInput.Kind.TOUCH, "dedito");
         Sequence sequence = new Sequence(dedito, 0)

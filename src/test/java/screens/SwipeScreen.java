@@ -46,6 +46,14 @@ public class SwipeScreen extends BaseScreen {
                 attempts++;
             }
         }
+        // Fallar explícitamente si la tarjeta sigue visible tras 3 intentos:
+        // antes el método terminaba en silencio y el test continuaba con un
+        // estado inconsistente (fallos confusos más adelante).
+        if (isCardIndexVisible(currentIndex)) {
+            throw new org.openqa.selenium.TimeoutException(
+                    "La tarjeta " + currentIndex + " sigue visible después de "
+                            + maxAttempts + " intentos de swipe.");
+        }
     }
 
     public void swipeCarouselForward() {
