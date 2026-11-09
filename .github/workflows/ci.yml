@@ -172,8 +172,11 @@ jobs:
           # (uno 100% y otro ~0%) distorsionaba la tendencia y los KPIs.
           COMBINED=../target/surefire-reports-combined
           mkdir -p "$COMBINED"
-          cp ../target/surefire-reports-main/TEST-*.xml "$COMBINED"/
-          cp ../target/surefire-reports-known/TEST-*.xml "$COMBINED"/
+          # Prefijo distinto por paso: Surefire+TestNG nombra TEST-TestSuite.xml
+          # en ambos pasos, y un cp sin prefijo hace que el segundo sobrescriba
+          # al primero (se perdian Login/Signup del registro combinado).
+          for f in ../target/surefire-reports-main/TEST-*.xml;  do cp "$f" "$COMBINED/TEST-main-${f##*/TEST-}";  done
+          for f in ../target/surefire-reports-known/TEST-*.xml; do cp "$f" "$COMBINED/TEST-known-${f##*/TEST-}"; done
           # Los 3 repos publican al mismo almacén y pueden llegar a la vez:
           # si el push es rechazado (non-fast-forward), se toma el histórico
           # remoto actualizado, se regenera el registro sobre él (el parser
