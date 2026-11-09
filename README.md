@@ -6,7 +6,7 @@ Framework de automatización de pruebas para la **WebdriverIO Native Demo App** 
 
 Este proyecto automatiza cuatro flujos de usuario principales de la aplicación nativa demo de WebdriverIO:
 
-- **Login**: inicio de sesión con credenciales válidas y verificación del acceso al inventario/home de la app.
+- **Login**: inicio de sesión con credenciales válidas y verificación del diálogo de confirmación "You are logged in!".
 - **Signup**: creación de una nueva cuenta con datos autogenerados y verificación del diálogo de confirmación.
 - **Swipe**: deslizamiento horizontal de tarjetas hasta llegar al texto oculto (`You found me!!!`) de la última tarjeta.
 - **Navigation**: navegación por las pestañas del menú inferior (Home, Web, Forms, Swipe, Drag, Menu).
@@ -65,6 +65,10 @@ WdioMobileAutomation/
 
 - **Driver no thread-safe**: `DriverManager` mantiene el `AndroidDriver` en un campo `static` (una sesión por JVM). Es suficiente para la ejecución secuencial de TestNG, pero **no permite ejecución en paralelo**; para paralelismo habría que migrar a `ThreadLocal<AndroidDriver>`.
 - **Gestos de swipe**: `swipeElementHorizontally` usa un margen del 5 % en los bordes para no terminar en x=0 (donde Android puede interpretar el gesto como "atrás"). `swipeForwardAndWait` falla explícitamente si la tarjeta sigue visible tras 3 intentos. Aun así, el renderizado por software del emulador (SwiftShader) puede hacer este test intermitente.
+- El escenario **Navigation** requiere que el WebView de la app renderice; en emuladores headless con renderizado por software (SwiftShader) el contenido del WebView puede no cargar, causando el fallo del escenario. En emuladores con aceleración por hardware pasa consistentemente.
+- El escenario **Swipe** es intermitente en emuladores headless con renderizado por software: los gestos de deslizamiento no siempre son procesados por el sistema, por lo que el escenario puede fallar aunque el framework y los localizadores sean correctos. En emuladores con aceleración por hardware pasa consistentemente (verificado durante la fase de refactorización).
+
+Ambos escenarios (Navigation y Swipe) se ejecutan en CI en un paso separado con `maven.test.failure.ignore=true`, de modo que sus fallos quedan registrados en los reportes de Surefire/Allure como **fallas conocidas** (evidencia documentada) sin romper el pipeline.
 
 ## Configuración
 
@@ -99,13 +103,6 @@ Con configuración personalizada:
 ```bash
 mvn clean test -Dappium.url=http://127.0.0.1:4723 -Ddevice.name=Pixel_6 -Dapp.path=/ruta/a/app.apk
 ```
-
-## Limitaciones conocidas
-
-- El escenario **Navigation** requiere que el WebView de la app renderice; en emuladores headless con renderizado por software (SwiftShader) el contenido del WebView puede no cargar, causando el fallo del escenario. En emuladores con aceleración por hardware pasa consistentemente.
-- El escenario **Swipe** es intermitente en emuladores headless con renderizado por software: los gestos de deslizamiento no siempre son procesados por el sistema, por lo que el escenario puede fallar aunque el framework y los localizadores sean correctos. En emuladores con aceleración por hardware pasa consistentemente (verificado durante la fase de refactorización).
-
-Ambos escenarios se ejecutan en CI en un paso separado con `maven.test.failure.ignore=true`, de modo que sus fallos quedan registrados en los reportes de Surefire/Allure como **fallas conocidas** (evidencia documentada) sin romper el pipeline.
 
 ## Pipeline CI/CD
 
