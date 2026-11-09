@@ -10,6 +10,13 @@ on:
     # Ejecución diaria 06:00 UTC (01:00 hora Colombia) — alimenta el histórico del dashboard
     - cron: "0 6 * * *"
 
+# Evita corridas simultáneas del mismo repo (push + cron pueden solaparse);
+# la publicación al dashboard usa su propio bucle de reintento para la
+# carrera entre repos distintos.
+concurrency:
+  group: ci-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   mobile-tests:
     name: Mobile Tests (Android emulator)
@@ -154,27 +161,41 @@ jobs:
           if [ -z "$EXEC_AT" ]; then
             EXEC_AT=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
           fi
-          python3 dashboard-repo/parser/results_parser.py \
-            --project WdioMobileAutomation \
-            --reports-dir target/surefire-reports-main \
-            --output dashboard-repo/data/results.json \
-            --executed-at "$EXEC_AT"
-          # Segundo registro (fallas conocidas) con timestamp +1 s para
-          # mantener ISO-8601 válido y distinguirlo del principal.
-          EXEC_AT_KNOWN=$(date -u -d "$EXEC_AT + 1 second" +"%Y-%m-%dT%H:%M:%S+00:00" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S+00:00")
-          python3 dashboard-repo/parser/results_parser.py \
-            --project WdioMobileAutomation \
-            --reports-dir target/surefire-reports-known \
-            --output dashboard-repo/data/results.json \
-            --executed-at "$EXEC_AT_KNOWN"
           cd dashboard-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/results.json
-          if git diff --cached --quiet; then
-            echo "Sin cambios en el histórico — nada que publicar."
-          else
+          # Los 3 repos publican al mismo almacén y pueden llegar a la vez:
+          # si el push es rechazado (non-fast-forward), se toma el histórico
+          # remoto actualizado, se regeneran los registros sobre él (el parser
+          # deduplica por proyecto+executed_at) y se reintenta.
+          for intento in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 parser/results_parser.py \
+              --project WdioMobileAutomation \
+              --reports-dir ../target/surefire-reports-main \
+              --output data/results.json \
+              --executed-at "$EXEC_AT"
+            # Segundo registro (fallas conocidas) con timestamp +1 s para
+            # mantener ISO-8601 válido y distinguirlo del principal.
+            EXEC_AT_KNOWN=$(date -u -d "$EXEC_AT + 1 second" +"%Y-%m-%dT%H:%M:%S+00:00" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+            python3 parser/results_parser.py \
+              --project WdioMobileAutomation \
+              --reports-dir ../target/surefire-reports-known \
+              --output data/results.json \
+              --executed-at "$EXEC_AT_KNOWN"
+            git add data/results.json
+            if git diff --cached --quiet; then
+              echo "Sin cambios en el histórico — nada que publicar."
+              exit 0
+            fi
             git commit -m "ci: resultados automaticos de WdioMobileAutomation (run ${{ github.run_id }})"
-            git push origin main
-            echo "Resultados publicados en el dashboard."
-          fi
+            if git push origin main; then
+              echo "Resultados publicados en el dashboard."
+              exit 0
+            fi
+            echo "Push rechazado (intento $intento/5) — reintentando con el histórico remoto."
+            sleep $((RANDOM % 10 + 5))
+          done
+          echo "No se pudo publicar tras 5 intentos."
+          exit 1
