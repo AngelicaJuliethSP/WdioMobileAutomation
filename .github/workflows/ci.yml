@@ -164,26 +164,28 @@ jobs:
           cd dashboard-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Un solo registro por corrida: se combinan los reportes del paso
+          # principal (Login/Signup) y de fallas conocidas (Navigation/Swipe)
+          # en un solo directorio; el parser los fusiona en un único registro
+          # con cada test en su estado real (los fallos quedan marcados como
+          # failed en el detalle, no ocultos). Publicar 2 registros separados
+          # (uno 100% y otro ~0%) distorsionaba la tendencia y los KPIs.
+          COMBINED=../target/surefire-reports-combined
+          mkdir -p "$COMBINED"
+          cp ../target/surefire-reports-main/TEST-*.xml "$COMBINED"/
+          cp ../target/surefire-reports-known/TEST-*.xml "$COMBINED"/
           # Los 3 repos publican al mismo almacén y pueden llegar a la vez:
           # si el push es rechazado (non-fast-forward), se toma el histórico
-          # remoto actualizado, se regeneran los registros sobre él (el parser
+          # remoto actualizado, se regenera el registro sobre él (el parser
           # deduplica por proyecto+executed_at) y se reintenta.
           for intento in 1 2 3 4 5; do
             git fetch origin main
             git reset --hard origin/main
             python3 parser/results_parser.py \
               --project WdioMobileAutomation \
-              --reports-dir ../target/surefire-reports-main \
+              --reports-dir "$COMBINED" \
               --output data/results.json \
               --executed-at "$EXEC_AT"
-            # Segundo registro (fallas conocidas) con timestamp +1 s para
-            # mantener ISO-8601 válido y distinguirlo del principal.
-            EXEC_AT_KNOWN=$(date -u -d "$EXEC_AT + 1 second" +"%Y-%m-%dT%H:%M:%S+00:00" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S+00:00")
-            python3 parser/results_parser.py \
-              --project WdioMobileAutomation \
-              --reports-dir ../target/surefire-reports-known \
-              --output data/results.json \
-              --executed-at "$EXEC_AT_KNOWN"
             git add data/results.json
             if git diff --cached --quiet; then
               echo "Sin cambios en el histórico — nada que publicar."
