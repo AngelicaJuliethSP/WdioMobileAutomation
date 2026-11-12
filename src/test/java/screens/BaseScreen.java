@@ -47,6 +47,21 @@ public abstract class BaseScreen {
         }
     }
 
+    /**
+     * Espera activa hasta que el locator sea visible. En CI el emulador usa
+     * renderizado por software y las pantallas tardan más en aparecer; una
+     * sola consulta findElements inmediata después de un tap devuelve vacío.
+     */
+    protected boolean waitForDisplayed(By locator, Duration timeout) {
+        try {
+            new WebDriverWait(driver, timeout)
+                    .until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return true;
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
+    }
+
     protected boolean isPresent(By locator) {
         return !driver.findElements(locator).isEmpty();
     }

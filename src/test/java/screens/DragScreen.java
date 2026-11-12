@@ -13,6 +13,6 @@ public class DragScreen extends BaseScreen {
     }
 
     public boolean isScreenDisplayed() {
-        return isDisplayed(screenContainer);
+        return waitForDisplayed(screenContainer, java.time.Duration.ofSeconds(15));
     }
 }

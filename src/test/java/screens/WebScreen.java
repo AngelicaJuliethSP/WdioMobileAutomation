@@ -20,6 +20,8 @@ public class WebScreen extends BaseScreen {
     }
 
     public boolean isWebdriverIOTextDisplayed() {
-        return isDisplayed(webdriverIOText);
+        // La WebView aparece antes de que su contenido renderice en el
+        // emulador de CI (renderizado por software); esperar el texto.
+        return waitForDisplayed(webdriverIOText, java.time.Duration.ofSeconds(20));
     }
 }

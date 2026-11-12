@@ -18,7 +18,9 @@ public class SwipeScreen extends BaseScreen {
     }
 
     public boolean isScreenDisplayed() {
-        return isDisplayed(screenContainer);
+        // El tap al ícono responde antes de que la pantalla termine de montarse
+        // (28 ms en CI); esperar en vez de consultar una sola vez.
+        return waitForDisplayed(screenContainer, java.time.Duration.ofSeconds(15));
     }
 
     private By cardAtIndex(int index) {

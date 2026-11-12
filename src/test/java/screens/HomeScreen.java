@@ -48,7 +48,7 @@ public class HomeScreen extends BaseScreen {
     }
 
     public boolean isHomeScreenDisplayed() {
-        return isDisplayed(homeScreenContainer);
+        return waitForDisplayed(homeScreenContainer, java.time.Duration.ofSeconds(15));
     }
 
 }
