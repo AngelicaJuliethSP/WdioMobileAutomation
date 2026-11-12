@@ -3,6 +3,7 @@ package screens;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
@@ -61,10 +62,19 @@ public class SwipeScreen extends BaseScreen {
     public void swipeCarouselForward() {
         List<WebElement> cards = driver.findElements(card);
         if (!cards.isEmpty()) {
-            // Deslizar de derecha a izquierda avanza el carrusel a la
-            // siguiente carta (hacia la derecha no hacía nada porque
-            // ya estábamos en la primera carta, no había hacia dónde retroceder).
-            swipeElementHorizontally(cards.get(0), false);
+            // mobile: swipeGesture nativo de uiautomator2: el gesto W3C manual
+            // (PointerInput) no mueve el carrusel en este emulador (600 ms no
+            // genera la velocidad necesaria) y un percent alto (0.9) lo
+            // interpreta como cambio de página y regresa al Home. percent 0.5
+            // sobre el área de la carta avanza exactamente una posición.
+            Rectangle cardRect = cards.get(0).getRect();
+            driver.executeScript("mobile: swipeGesture", java.util.Map.of(
+                    "left", cardRect.getX(),
+                    "top", cardRect.getY(),
+                    "width", cardRect.getWidth(),
+                    "height", cardRect.getHeight(),
+                    "direction", "left",
+                    "percent", 0.5));
         }
     }
 
@@ -87,6 +97,18 @@ public class SwipeScreen extends BaseScreen {
 
     public boolean isCardOnScreen(int index) {
         return isPartiallyOnScreen(cardAtIndex(index));
+    }
+
+    public boolean waitForCardOnScreen(int index, java.time.Duration timeout) {
+        // Tras ocultar la carta anterior, el carrusel puede tardar en montar
+        // la siguiente; verificar de inmediato daba falsos negativos.
+        try {
+            new org.openqa.selenium.support.ui.WebDriverWait(driver, timeout)
+                    .until(driver -> isCardOnScreen(index));
+            return true;
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
     }
 
     public boolean isFoundMeTextDisplayed() {

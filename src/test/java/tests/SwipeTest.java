@@ -25,7 +25,8 @@ public class SwipeTest extends BaseTest {
         for (int i = 1; i < 5; i++) {
             swipeScreen.swipeForwardAndWait(i);
         }
-        Assert.assertTrue(swipeScreen.isCardOnScreen(5), "La última carta (5) debería estar visible");
+        Assert.assertTrue(swipeScreen.waitForCardOnScreen(5, java.time.Duration.ofSeconds(15)),
+                "La última carta (5) debería estar visible");
         Assert.assertFalse(swipeScreen.isCardOnScreen(4), "No debería verse ninguna carta anterior junto a la última");
 
         // d. Scroll vertical hasta encontrar el texto oculto
