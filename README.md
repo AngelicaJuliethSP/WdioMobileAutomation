@@ -64,11 +64,16 @@ WdioMobileAutomation/
 ### Limitaciones conocidas
 
 - **Driver no thread-safe**: `DriverManager` mantiene el `AndroidDriver` en un campo `static` (una sesión por JVM). Es suficiente para la ejecución secuencial de TestNG, pero **no permite ejecución en paralelo**; para paralelismo habría que migrar a `ThreadLocal<AndroidDriver>`.
-- **Gestos de swipe**: `swipeElementHorizontally` usa un margen del 5 % en los bordes para no terminar en x=0 (donde Android puede interpretar el gesto como "atrás"). `swipeForwardAndWait` falla explícitamente si la tarjeta sigue visible tras 3 intentos. Aun así, el renderizado por software del emulador (SwiftShader) puede hacer este test intermitente.
-- El escenario **Navigation** requiere que el WebView de la app renderice; en emuladores headless con renderizado por software (SwiftShader) el contenido del WebView puede no cargar, causando el fallo del escenario. En emuladores con aceleración por hardware pasa consistentemente.
-- El escenario **Swipe** es intermitente en emuladores headless con renderizado por software: los gestos de deslizamiento no siempre son procesados por el sistema, por lo que el escenario puede fallar aunque el framework y los localizadores sean correctos. En emuladores con aceleración por hardware pasa consistentemente (verificado durante la fase de refactorización).
+- **Gestos de swipe**: el deslizamiento horizontal usa un margen del **10 %** en ambos bordes (en API 35+ el gesto "atrás" del sistema ocupa una franja del borde y un swipe que empiece dentro de ella saca la app al launcher en vez de mover el carrusel). El carrusel del escenario Swipe usa el **gesto nativo `mobile: swipeGesture`** de uiautomator2 (percent 0.5 sobre el rect de la carta), que avanza exactamente una posición. `swipeForwardAndWait` falla explícitamente si la tarjeta sigue visible tras 3 intentos.
 
-Ambos escenarios (Navigation y Swipe) se ejecutan en CI en un paso separado con `maven.test.failure.ignore=true`, de modo que sus fallos quedan registrados en los reportes de Surefire/Allure como **fallas conocidas** (evidencia documentada) sin romper el pipeline.
+### Historia: por qué Navigation y Swipe fallaban en CI
+
+Hasta el 11 de noviembre de 2026, los escenarios **Navigation** y **Swipe** fallaban de forma intermitente en el emulador de CI. La causa **no** era el renderizado por software (SwiftShader) del emulador — ese entorno lento solo dejó el problema en evidencia. Las causas reales, diagnosticadas con logs de Appium y dumps de uiautomator, fueron dos defectos del propio framework:
+
+1. **Aserciones ejecutadas antes de que la pantalla terminara de cargar**: tras un tap, el test verificaba el resultado inmediatamente (la búsqueda de elementos se hacía ~30 ms después del click, cuando la pantalla aún no montaba el contenido). Fix: esperas explícitas (`waitForDisplayed` con timeout de 15–20 s) en los 7 screens (commit `6b17dae`).
+2. **Gesto de swipe insuficiente o mal ubicado**: el gesto W3C manual (PointerInput, 600 ms) no generaba la velocidad necesaria para que el carrusel cambiara de tarjeta, y un swipe que empezaba dentro de la franja del gesto "atrás" del sistema (~6 % del borde) sacaba la app al launcher. Fix: gesto nativo `mobile: swipeGesture` de uiautomator2 con percent 0.5 sobre el rect de la carta, y margen de swipe del 10 % (commit `b6383ef`).
+
+Desde esas correcciones, las 4 pruebas (Login, Signup, Navigation, Swipe) pasan de forma estable en CI y se ejecutan en un **único paso** del workflow, sin exclusiones ni tolerancia de fallas. El emulador lento de CI solo actuó como amplificador: hizo visible un problema que existía en el código de pruebas.
 
 ## Configuración
 

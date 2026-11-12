@@ -71,49 +71,18 @@ jobs:
           profile: pixel_6
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          # Paso principal: solo escenarios estables (deben pasar sí o sí).
-          # NavigationTest y SwipeTest se ejecutan en un paso aparte como
-          # "fallas conocidas" (ver paso siguiente).
-          # Nota: -Dsurefire.reportDirectory no funciona en Surefire 3.1.2
-          # (verificado empíricamente: los XML siempre van a
-          # target/surefire-reports). Se usa el directorio por defecto y se
-          # renombra con mv en el paso siguiente.
-          script: mvn clean test -B "-Dtest=LoginTest,SignupTest"
-
-      - name: Preserve main reports
-        if: always()
-        run: mv target/surefire-reports target/surefire-reports-main
-
-      - name: Run known-failure scenarios (Navigation, Swipe)
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          # Escenarios intermitentes bajo renderizado por software
-          # (SwiftShader): WebView no renderiza (Navigation) y gestos de
-          # swipe no siempre se procesan (Swipe). Limitación conocida del
-          # entorno de CI, documentada en el README. Se ejecutan con
-          # maven.test.failure.ignore=true para que la falla quede
-          # registrada en los reportes Surefire/Allure como evidencia
-          # documentada, sin romper el pipeline.
-          script: mvn test -B "-Dtest=NavigationTest,SwipeTest" "-Dmaven.test.failure.ignore=true"
-
-      - name: Preserve known-failure reports
-        if: always()
-        run: mv target/surefire-reports target/surefire-reports-known
+          # Paso único: las 4 pruebas (Login, Signup, Navigation, Swipe) pasan
+          # de forma estable desde el 11-nov gracias a las esperas explícitas
+          # tras cada tap (commit 6b17dae) y al gesto nativo
+          # mobile: swipeGesture del carrusel (commit b6383ef).
+          script: mvn clean test -B
 
       - name: Upload Surefire reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports-mobile
-          path: |
-            target/surefire-reports-main/
-            target/surefire-reports-known/
+          path: target/surefire-reports/
           retention-days: 7
 
       - name: Upload Allure results
@@ -164,19 +133,10 @@ jobs:
           cd dashboard-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Un solo registro por corrida: se combinan los reportes del paso
-          # principal (Login/Signup) y de fallas conocidas (Navigation/Swipe)
-          # en un solo directorio; el parser los fusiona en un único registro
-          # con cada test en su estado real (los fallos quedan marcados como
-          # failed en el detalle, no ocultos). Publicar 2 registros separados
-          # (uno 100% y otro ~0%) distorsionaba la tendencia y los KPIs.
-          COMBINED=../target/surefire-reports-combined
-          mkdir -p "$COMBINED"
-          # Prefijo distinto por paso: Surefire+TestNG nombra TEST-TestSuite.xml
-          # en ambos pasos, y un cp sin prefijo hace que el segundo sobrescriba
-          # al primero (se perdian Login/Signup del registro combinado).
-          for f in ../target/surefire-reports-main/TEST-*.xml;  do cp "$f" "$COMBINED/TEST-main-${f##*/TEST-}";  done
-          for f in ../target/surefire-reports-known/TEST-*.xml; do cp "$f" "$COMBINED/TEST-known-${f##*/TEST-}"; done
+          # Registro único por corrida: los XML de Surefire van al directorio
+          # por defecto (target/surefire-reports) y el parser los fusiona en
+          # un solo registro con los 4 tests en su estado real.
+          REPORTS=../target/surefire-reports
           # Los 3 repos publican al mismo almacén y pueden llegar a la vez:
           # si el push es rechazado (non-fast-forward), se toma el histórico
           # remoto actualizado, se regenera el registro sobre él (el parser
@@ -186,7 +146,7 @@ jobs:
             git reset --hard origin/main
             python3 parser/results_parser.py \
               --project WdioMobileAutomation \
-              --reports-dir "$COMBINED" \
+              --reports-dir "$REPORTS" \
               --output data/results.json \
               --executed-at "$EXEC_AT"
             git add data/results.json
