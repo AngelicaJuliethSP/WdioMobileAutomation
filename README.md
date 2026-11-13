@@ -21,6 +21,7 @@ Este proyecto automatiza cuatro flujos de usuario principales de la aplicación 
 | Appium Server | 3.9.0 | Servidor de automatización |
 | Driver UiAutomator2 | 8.7.3 | Motor de automatización Android |
 | TestNG | 7.10.2 | Ejecutor de pruebas y anotaciones |
+| Allure TestNG | 2.29.1 | Reportes de ejecución (target/allure-results/) |
 | Emulador Android | API 30 (CI) / API 34+ (local) | Dispositivo objetivo (AVD Pixel 6) |
 
 ## Estructura del proyecto
@@ -50,6 +51,9 @@ WdioMobileAutomation/
 │       │   └── NavigationTest.java
 │       └── utils/
 │           └── DataGenerator.java   # Generación de datos de prueba aleatorios
+├── src/test/resources/
+│   └── allure.properties             # Dirige los resultados Allure a target/allure-results
+├── .github/workflows/ci.yml          # Pipeline de integración continua
 ├── pom.xml
 └── .gitignore
 ```
