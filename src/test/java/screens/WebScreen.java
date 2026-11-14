@@ -16,7 +16,10 @@ public class WebScreen extends BaseScreen {
     }
 
     public boolean isScreenDisplayed() {
-        return isDisplayed(screenContainer);
+        // El WebView tarda en montarse después del tap al ícono (en CI la
+        // consulta inmediata devolvió vacío a los 262 ms); esperar como en
+        // las demás pantallas.
+        return waitForDisplayed(screenContainer, java.time.Duration.ofSeconds(15));
     }
 
     public boolean isWebdriverIOTextDisplayed() {
