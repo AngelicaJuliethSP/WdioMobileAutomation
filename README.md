@@ -72,12 +72,24 @@ WdioMobileAutomation/
 
 ### Historia: por qué Navigation y Swipe fallaban en CI
 
-Hasta el 11 de noviembre de 2026, los escenarios **Navigation** y **Swipe** fallaban de forma intermitente en el emulador de CI. La causa **no** era el renderizado por software (SwiftShader) del emulador — ese entorno lento solo dejó el problema en evidencia. Las causas reales, diagnosticadas con logs de Appium y dumps de uiautomator, fueron dos defectos del propio framework:
+Hasta el 11 de noviembre de 2026, los escenarios **Navigation** y **Swipe** fallaban de forma recurrente en el emulador de CI. La causa **no** era el renderizado por software (SwiftShader) del emulador — ese entorno lento solo dejó el problema en evidencia. Las causas reales, diagnosticadas con logs de Appium y dumps de uiautomator, fueron dos defectos del propio framework:
 
-1. **Aserciones ejecutadas antes de que la pantalla terminara de cargar**: tras un tap, el test verificaba el resultado inmediatamente (la búsqueda de elementos se hacía ~30 ms después del click, cuando la pantalla aún no montaba el contenido). Fix: esperas explícitas (`waitForDisplayed` con timeout de 15–20 s) en 6 pantallas (Home, Web, Forms, Swipe, Drag y Menu) y en `BaseScreen` (commit `6b17dae`).
+1. **Aserciones ejecutadas antes de que la pantalla terminara de cargar**: tras un tap, el test verificaba el resultado inmediatamente (la búsqueda de elementos se hacía ~30 ms después del click, cuando la pantalla aún no montaba el contenido). Fix: esperas explícitas (`waitForDisplayed` con timeout de 15–20 s) en las pantallas Home, Web, Forms, Swipe, Drag y Menu y en `BaseScreen` (commit `6b17dae`). En `WebScreen` la espera se aplicó al texto «WebdriverIO», pero la verificación del contenedor (`isScreenDisplayed()`) quedó como consulta inmediata; se completó el 14-nov (commit `1e21b8b`, ver abajo).
 2. **Gesto de swipe insuficiente o mal ubicado**: el gesto W3C manual (PointerInput, 600 ms) no generaba la velocidad necesaria para que el carrusel cambiara de tarjeta, y un swipe que empezaba dentro de la franja del gesto "atrás" del sistema (~6 % del borde) sacaba la app al launcher. Fix: gesto nativo `mobile: swipeGesture` de uiautomator2 con percent 0.5 sobre el rect de la carta, y margen de swipe del 10 % (commit `b6383ef`).
 
-Desde esas correcciones, las 4 pruebas (Login, Signup, Navigation, Swipe) pasan de forma estable en CI y se ejecutan en un **único paso** del workflow, sin exclusiones ni tolerancia de fallas. El emulador lento de CI solo actuó como amplificador: hizo visible un problema que existía en el código de pruebas.
+Con esas correcciones, las 4 pruebas pasaron en las 8 ejecuciones siguientes y el workflow se unificó en un **único paso**, sin exclusiones ni tolerancia de fallas (commit `d22b43c`).
+
+**Fallo residual (14-nov-2026).** La ejecución programada del 14-nov falló en `NavigationTest` a los 262 ms con `Web screen no se muestra`: `WebScreen.isScreenDisplayed()` seguía consultando el contenedor del WebView sin espera, y ese día el WebView tardó más en montarse. Fix: `waitForDisplayed(screenContainer, 15 s)`, igual que en las demás pantallas (commit `1e21b8b`).
+
+**Estado al 17-nov-2026:** desde `1e21b8b`, las 4 pruebas pasaron en las 11 ejecuciones registradas en CI (44 de 44), incluidas las ejecuciones programadas del 15, 16 y 17 de noviembre.
+
+| Etapa | Ejecuciones en CI | Pruebas aprobadas | `navigateThroughBottomMenu` |
+|---|---|---|---|
+| Antes de las correcciones (hasta el 11-nov) | 20 | 43 de 76 (57 %) | 0 de 17 |
+| Primera corrección (`6b17dae`, `b6383ef`; 11 al 14-nov) | 9 | 35 de 36 | 8 de 9 |
+| Corrección completa (`1e21b8b`; 14 al 17-nov) | 11 | 44 de 44 (100 %) | 11 de 11 |
+
+El emulador lento de CI solo actuó como amplificador: hizo visible un problema de sincronización que existía en el código de pruebas. El seguimiento del histórico en el dashboard permitió detectar tanto la causa original como el caso que la primera corrección no cubrió.
 
 ## Configuración
 
