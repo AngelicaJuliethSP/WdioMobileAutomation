@@ -71,9 +71,9 @@ jobs:
           profile: pixel_6
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          # Paso único: las 4 pruebas (Login, Signup, Navigation, Swipe) pasan
-          # de forma estable desde el 11-nov gracias a las esperas explícitas
-          # tras cada tap (commit 6b17dae) y al gesto nativo
+          # Paso único: las 4 pruebas (Login, Signup, Navigation, Swipe) se
+          # ejecutan sin exclusiones gracias a las esperas explícitas tras cada
+          # tap (commits 6b17dae y 1e21b8b) y al gesto nativo
           # mobile: swipeGesture del carrusel (commit b6383ef).
           script: mvn clean test -B
 
